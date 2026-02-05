@@ -1,6 +1,8 @@
 package com.mitteloupe.whoami.home.ui.view
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -11,8 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,187 +21,152 @@ import androidx.compose.ui.unit.dp
 import com.mitteloupe.whoami.analytics.Analytics
 import com.mitteloupe.whoami.analytics.AnalyticsEvent
 import com.mitteloupe.whoami.architecture.ui.view.ScreenEnterObserver
+import com.mitteloupe.whoami.home.domain.model.ActivityCategory
+import com.mitteloupe.whoami.home.domain.model.EnergyLevel
 import com.mitteloupe.whoami.home.presentation.model.HomeViewState
 import com.mitteloupe.whoami.home.ui.R
+import com.mitteloupe.whoami.home.ui.content.SelectionContent
+import com.mitteloupe.whoami.home.ui.content.SmartCat
 import com.mitteloupe.whoami.home.ui.di.HomeDependencies
-import com.mitteloupe.whoami.home.ui.model.ConnectionDetailsUiModel
-import com.mitteloupe.whoami.home.ui.model.HomeViewStateUiModel
-import com.mitteloupe.whoami.home.ui.model.IconLabelUiModel
-import com.mitteloupe.whoami.home.ui.view.widget.ConnectedContentContainer
-import com.mitteloupe.whoami.home.ui.view.widget.DisconnectedContentContainer
-import com.mitteloupe.whoami.home.ui.view.widget.ErrorContentContainer
-import com.mitteloupe.whoami.home.ui.view.widget.HomeFooter
 import com.mitteloupe.whoami.home.ui.view.widget.LoadingAnimationContainer
 
 @Composable
 fun HomeDependencies.Home(backStack: MutableList<Any>, modifier: Modifier = Modifier) {
-    fun relaySavingToViewModel(connectionDetails: ConnectionDetailsUiModel) {
-        val presentationConnection = connectionDetailsPresentationMapper
-            .toPresentation(connectionDetails)
-        homeViewModel.onSaveDetailsAction(presentationConnection)
-    }
-
+    // 1. 监听进入事件
     ScreenEnterObserver {
         analytics.logScreen("Home")
         homeViewModel.onEnter()
     }
 
+    // 2. 监听 ViewModel 事件 (导航/通知)
     ViewModelObserver(backStack)
 
+    // 3. 收集 UI 状态
+    // 注意：这里直接收集 Presentation 层的 State，不再需要 UI Mapper 转换
     val viewState by homeViewModel.viewState.collectAsState(HomeViewState.Loading)
 
-    val connectionDetails by rememberSaveable(viewState) {
-        mutableStateOf(
-            (viewState as? HomeViewState.Connected)?.let(connectionDetailsUiMapper::toUi)
-        )
-    }
-    val errorMessage by rememberSaveable(viewState) {
-        mutableStateOf((viewState as? HomeViewState.Error)?.let(errorUiMapper::toUi).orEmpty())
-    }
-    val uiState by rememberSaveable(viewState) {
-        mutableStateOf(homeViewStateUiMapper.toUi(viewState))
-    }
-
     HomeContents(
-        viewState = uiState,
-        connectionDetails = connectionDetails,
-        errorMessage = errorMessage,
+        viewState = viewState,
         analytics = analytics,
-        onSaveDetailsClick = {
-            val latestConnectionDetails = connectionDetails
-            requireNotNull(latestConnectionDetails)
-            relaySavingToViewModel(latestConnectionDetails)
-        },
-        onViewHistoryClick = { homeViewModel.onViewHistoryAction() },
-        onOpenSourceNoticesClick = { homeViewModel.onOpenSourceNoticesAction() },
+        // 绑定 ViewModel 的动作
+        onCategorySelected = homeViewModel::onCategorySelected,
+        onTaskStarted = homeViewModel::onTaskStarted,
+        onTaskCompleted = homeViewModel::onTaskCompleted,
+        onViewHistoryClick = homeViewModel::onViewHistoryAction,
+        onOpenSourceNoticesClick = homeViewModel::onOpenSourceNoticesAction,
         modifier = modifier
     )
 }
 
 @Composable
 private fun HomeContents(
-    viewState: HomeViewStateUiModel,
-    connectionDetails: ConnectionDetailsUiModel?,
-    errorMessage: String,
+    viewState: HomeViewState,
     analytics: Analytics,
-    onSaveDetailsClick: () -> Unit,
+    onCategorySelected: (ActivityCategory, EnergyLevel) -> Unit,
+    onTaskStarted: (String, String?) -> Unit,
+    onTaskCompleted: () -> Unit,
     onViewHistoryClick: () -> Unit,
     onOpenSourceNoticesClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    Box(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .verticalScroll(rememberScrollState())
     ) {
-        Text(
-            text = stringResource(R.string.app_name),
-            style = MaterialTheme.typography.headlineLarge,
-            modifier = Modifier.padding(10.dp, 48.dp, 10.dp, 0.dp)
-        )
+        // 根据状态显示不同的全屏内容
+        when (viewState) {
+            is HomeViewState.Loading -> {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center // 顺便让它居中
+                ) {
+                    LoadingAnimationContainer(visible = true)
+                }
+            }
 
-        LoadingAnimationContainer(visible = viewState is HomeViewStateUiModel.Loading)
+            is HomeViewState.Selection -> {
+                // 🆕 首页：智能小猫 + 三个大按钮
+                SelectionContent(
+                    onCategorySelected = onCategorySelected,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
 
-        ConnectedContentContainer(
-            visible = viewState is HomeViewStateUiModel.Connected,
-            connectionDetails = connectionDetails
-        )
+            is HomeViewState.Inputting -> {
+                // TODO: 下一步我们会创建 InputtingContent
+                // 暂时先用简单的 Text 占位，防止编译报错
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("这里是输入页面 (Inputting)", style = MaterialTheme.typography.titleLarge)
+                    Text("当前类别: ${viewState.category}")
+                }
+            }
 
-        DisconnectedContentContainer(
-            visible = viewState is HomeViewStateUiModel.Disconnected
-        )
+            is HomeViewState.Focusing -> {
+                // TODO: 下一步我们会创建 FocusingContent
+                // 这里暂时展示一个简单的专注界面占位
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // 复用 SmartCat，根据是否 meowing 决定状态
+                    SmartCat(
+                        lottieResId = if (viewState.isCatMeowing) R.raw.loadercat else R.raw.loadercat, // 暂时都用 loader_cat
+                        message = if (viewState.isCatMeowing) "喵！你还在吗？" else "专注中..."
+                    )
+                    Text(
+                        text = viewState.currentTask.content,
+                        style = MaterialTheme.typography.headlineMedium,
+                        modifier = Modifier.padding(top = 24.dp)
+                    )
+                }
+            }
 
-        ErrorContentContainer(
-            visible = viewState is HomeViewStateUiModel.Error,
-            errorText = errorMessage
-        )
-
-        HomeFooter(
-            connected = viewState is HomeViewStateUiModel.Connected,
-            analytics = analytics,
-            onSaveDetailsClick = onSaveDetailsClick,
-            onViewHistoryClick = onViewHistoryClick,
-            onOpenSourceNoticesClick = onOpenSourceNoticesClick
-        )
+            is HomeViewState.Error -> {
+//                ErrorContentContainer(
+//                    visible = true,
+//                    errorText = viewState.message // 使用新的 message 字段
+//                )
+            }
+        }
     }
+}
+
+// --- Preview 部分 ---
+
+@Preview
+@Composable
+private fun PreviewSelection() {
+    HomeContents(
+        viewState = HomeViewState.Selection(),
+        analytics = object : Analytics {
+            override fun logScreen(screenName: String) = Unit
+            override fun logEvent(event: AnalyticsEvent) = Unit
+        },
+        onCategorySelected = { _, _ -> },
+        onTaskStarted = { _, _ -> },
+        onTaskCompleted = {},
+        onViewHistoryClick = {},
+        onOpenSourceNoticesClick = {}
+    )
 }
 
 @Preview
 @Composable
 private fun PreviewLoading() {
     HomeContents(
-        viewState = HomeViewStateUiModel.Loading,
-        connectionDetails = null,
-        errorMessage = "",
+        viewState = HomeViewState.Loading,
         analytics = object : Analytics {
             override fun logScreen(screenName: String) = Unit
             override fun logEvent(event: AnalyticsEvent) = Unit
         },
-        onSaveDetailsClick = {},
-        onViewHistoryClick = {},
-        onOpenSourceNoticesClick = {}
-    )
-}
-
-@Preview
-@Composable
-private fun PreviewDisconnected() {
-    HomeContents(
-        viewState = HomeViewStateUiModel.Disconnected,
-        connectionDetails = null,
-        errorMessage = "",
-        analytics = object : Analytics {
-            override fun logScreen(screenName: String) = Unit
-            override fun logEvent(event: AnalyticsEvent) = Unit
-        },
-        onSaveDetailsClick = {},
-        onViewHistoryClick = {},
-        onOpenSourceNoticesClick = {}
-    )
-}
-
-@Preview
-@Composable
-private fun PreviewConnected() {
-    HomeContents(
-        viewState = HomeViewStateUiModel.Connected,
-        connectionDetails = ConnectionDetailsUiModel(
-            ipAddress = "255.255.255.255",
-            cityIconLabel = IconLabelUiModel(R.drawable.icon_city, "Haifa"),
-            regionIconLabel = IconLabelUiModel(R.drawable.icon_region, "North"),
-            countryIconLabel = IconLabelUiModel(R.drawable.icon_country, "Israel"),
-            geolocationIconLabel = IconLabelUiModel(R.drawable.icon_geolocation, "0.0, 0.0"),
-            postCode = IconLabelUiModel(R.drawable.icon_post_code, "12345"),
-            timeZone = IconLabelUiModel(R.drawable.icon_time_zone, "GMT +0200"),
-            internetServiceProviderName = IconLabelUiModel(
-                R.drawable.icon_internet_service_provider,
-                "Fast Connection Limited"
-            )
-        ),
-        errorMessage = "",
-        analytics = object : Analytics {
-            override fun logScreen(screenName: String) = Unit
-            override fun logEvent(event: AnalyticsEvent) = Unit
-        },
-        onSaveDetailsClick = {},
-        onViewHistoryClick = {},
-        onOpenSourceNoticesClick = {}
-    )
-}
-
-@Preview
-@Composable
-private fun PreviewError() {
-    HomeContents(
-        viewState = HomeViewStateUiModel.Error,
-        connectionDetails = null,
-        errorMessage = "",
-        analytics = object : Analytics {
-            override fun logScreen(screenName: String) = Unit
-            override fun logEvent(event: AnalyticsEvent) = Unit
-        },
-        onSaveDetailsClick = {},
+        onCategorySelected = { _, _ -> },
+        onTaskStarted = { _, _ -> },
+        onTaskCompleted = {},
         onViewHistoryClick = {},
         onOpenSourceNoticesClick = {}
     )

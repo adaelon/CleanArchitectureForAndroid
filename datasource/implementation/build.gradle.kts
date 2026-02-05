@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.detekt)
+
+//    alias(libs.plugins.hilt)
 }
 
 android {
@@ -50,6 +52,10 @@ dependencies {
     ksp(libs.moshi.kotlin.codegen)
 
     implementation(libs.kotlinx.coroutines.core)
+
+//    implementation(libs.hilt.android)
+//    ksp(libs.hilt.android.compiler)
+
 
     testImplementation(libs.test.junit)
     testImplementation(libs.test.hamcrest)

@@ -48,6 +48,7 @@ detekt {
 
 dependencies {
     implementation(projects.home.presentation)
+    implementation(projects.home.domain)
 
     implementation(projects.architecture.ui)
     implementation(projects.architecture.presentation)
@@ -71,4 +72,9 @@ dependencies {
 
     androidTestImplementation(libs.test.androidx.junit)
     androidTestImplementation(libs.test.androidx.espresso.core)
+
+    // 动画
+    implementation("com.airbnb.android:lottie-compose:6.3.0")
+    // 气泡
+    implementation("com.github.skydoves:balloon-compose:1.5.4")
 }

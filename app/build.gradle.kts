@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    //id("org.jetbrains.kotlin.android")
     id("com.google.android.gms.oss-licenses-plugin")
     alias(libs.plugins.kotlin.plugin.serialization)
     alias(libs.plugins.ktlint)

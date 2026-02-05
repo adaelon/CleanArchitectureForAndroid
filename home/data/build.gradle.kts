@@ -26,4 +26,5 @@ dependencies {
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockk)
     testImplementation(libs.test.hamcrest)
+    implementation("javax.inject:javax.inject:1")
 }

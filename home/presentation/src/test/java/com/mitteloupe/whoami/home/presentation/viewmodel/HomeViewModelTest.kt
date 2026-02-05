@@ -5,8 +5,6 @@ import com.mitteloupe.whoami.home.domain.model.ConnectionDetailsDomainModel
 import com.mitteloupe.whoami.home.domain.model.ConnectionDetailsDomainModel.Disconnected
 import com.mitteloupe.whoami.home.domain.usecase.GetConnectionDetailsUseCase
 import com.mitteloupe.whoami.home.domain.usecase.SaveConnectionDetailsUseCase
-import com.mitteloupe.whoami.home.presentation.mapper.ConnectionDetailsDomainMapper
-import com.mitteloupe.whoami.home.presentation.mapper.ConnectionDetailsPresentationMapper
 import com.mitteloupe.whoami.home.presentation.mapper.ExceptionPresentationMapper
 import com.mitteloupe.whoami.home.presentation.model.HomePresentationNotification
 import com.mitteloupe.whoami.home.presentation.model.HomeViewState

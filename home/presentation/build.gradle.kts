@@ -20,10 +20,12 @@ dependencies {
     implementation(projects.architecture.domain)
 
     implementation(libs.kotlinx.coroutines.core)
+    implementation(project(":coroutine"))
 
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockito.kotlin)
     testImplementation(libs.test.kotlinx.coroutines)
     testImplementation(projects.architecture.presentationTest)
     testImplementation(projects.coroutineTest)
+    implementation("javax.inject:javax.inject:1")
 }

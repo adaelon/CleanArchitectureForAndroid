@@ -2,7 +2,6 @@ package com.mitteloupe.whoami.home.ui.mapper
 
 import com.mitteloupe.whoami.home.presentation.model.HomeViewState
 import com.mitteloupe.whoami.home.ui.R
-import com.mitteloupe.whoami.home.ui.model.ConnectionDetailsUiModel
 import com.mitteloupe.whoami.home.ui.model.IconLabelUiModel
 import org.junit.Assert.assertEquals
 import org.junit.Before

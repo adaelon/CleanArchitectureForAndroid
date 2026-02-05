@@ -33,12 +33,12 @@ fun HomeFooter(
             .fillMaxWidth()
             .padding(start = 16.dp, top = 24.dp, end = 16.dp, bottom = 16.dp)
     ) {
-        NavigationButtons(
-            connected = connected,
-            analytics = analytics,
-            onSaveDetailsClick = { onSaveDetailsClick() },
-            onViewHistoryClick = { onViewHistoryClick() }
-        )
+//        NavigationButtons(
+//            connected = connected,
+//            analytics = analytics,
+//            onSaveDetailsClick = { onSaveDetailsClick() },
+//            onViewHistoryClick = { onViewHistoryClick() }
+//        )
 
         Box(
             contentAlignment = Alignment.Center,

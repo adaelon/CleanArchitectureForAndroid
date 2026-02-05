@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.aboutlibraries)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.detekt)
+//    alias(libs.plugins.ksp)
+//    alias(libs.plugins.hilt)
 }
 
 android {
@@ -61,4 +63,9 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     implementation(libs.debug.compose.ui.tooling)
     implementation(libs.compose.ui.tooling.preview)
+
+//    // ✅ 新增 Hilt 依赖
+//    implementation(libs.hilt.android)
+//    // ✅ 新增 Hilt 编译器
+//    ksp(libs.hilt.android.compiler)
 }

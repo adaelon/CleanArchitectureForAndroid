@@ -23,4 +23,5 @@ dependencies {
 
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockito.kotlin)
+    implementation("javax.inject:javax.inject:1")
 }

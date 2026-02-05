@@ -1,56 +1,27 @@
 package com.mitteloupe.whoami.di
 
-import com.mitteloupe.whoami.datasource.connection.datasource.ConnectionDataSource
-import com.mitteloupe.whoami.datasource.history.datasource.IpAddressHistoryDataSource
-import com.mitteloupe.whoami.datasource.ipaddress.datasource.IpAddressDataSource
-import com.mitteloupe.whoami.datasource.ipaddressinformation.datasource.IpAddressInformationDataSource
-import com.mitteloupe.whoami.home.data.mapper.ConnectionDetailsDataMapper
-import com.mitteloupe.whoami.home.data.mapper.ConnectionDetailsDomainResolver
-import com.mitteloupe.whoami.home.data.mapper.ThrowableDomainMapper
-import com.mitteloupe.whoami.home.data.repository.ConnectionDetailsRepository
-import com.mitteloupe.whoami.home.data.repository.ConnectionHistoryRepository
-import com.mitteloupe.whoami.home.domain.repository.GetConnectionDetailsRepository
-import com.mitteloupe.whoami.home.domain.repository.SaveConnectionDetailsRepository
+import com.mitteloupe.whoami.home.data.repository.HomeConfigurationRepository
+import com.mitteloupe.whoami.home.domain.repository.ConfigurationRepository
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
-import dagger.Reusable
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 
 @Module
 @InstallIn(SingletonComponent::class)
-object HomeDataModule {
-    @Provides
-    fun providesConnectionDetailsDomainResolver() = ConnectionDetailsDomainResolver()
+abstract class HomeDataModule {
 
-    @Provides
-    fun providesThrowableDomainMapper() = ThrowableDomainMapper()
+    /**
+     * ✅ 核心修复：
+     * 1. 使用 abstract class (而不是 object)，这样才能包含 abstract 方法。
+     * 2. 绑定 ConfigurationRepository 到具体的 HomeConfigurationRepository 实现。
+     */
+    @Binds
+    abstract fun bindConfigurationRepository(
+        impl: HomeConfigurationRepository
+    ): ConfigurationRepository
 
-    @Provides
-    @Reusable
-    fun providesConnectionDetailsRepository(
-        ipAddressDataSource: IpAddressDataSource,
-        ipAddressInformationDataSource: IpAddressInformationDataSource,
-        connectionDataSource: ConnectionDataSource,
-        connectionDetailsDomainResolver: ConnectionDetailsDomainResolver,
-        throwableDomainMapper: ThrowableDomainMapper
-    ) = ConnectionDetailsRepository(
-        ipAddressDataSource,
-        ipAddressInformationDataSource,
-        connectionDataSource,
-        connectionDetailsDomainResolver,
-        throwableDomainMapper
-    )
-
-    @Provides
-    fun providesGetConnectionDetailsRepository(
-        connectionDetailsRepository: ConnectionDetailsRepository
-    ): GetConnectionDetailsRepository = connectionDetailsRepository
-
-    @Provides
-    fun providesSaveConnectionDetailsRepository(
-        ipAddressHistoryDataSource: IpAddressHistoryDataSource,
-        connectionDetailsDataMapper: ConnectionDetailsDataMapper
-    ): SaveConnectionDetailsRepository =
-        ConnectionHistoryRepository(ipAddressHistoryDataSource, connectionDetailsDataMapper)
+    // 🗑️ 已删除：所有 Connection/IP 相关的 Provider
+    // (ConnectionDetailsRepository, IpAddressDataSource 等)
+    // 这些属于旧功能，如果不删除，会导致 "Unresolved Reference" 或者是 Dagger 依赖图报错。
 }
